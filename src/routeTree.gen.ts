@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppQuestionarioRouteImport } from './routes/app.questionario'
+import { Route as AppHistoricoRouteImport } from './routes/app.historico'
 import { Route as AppAlterarSenhaRouteImport } from './routes/app.alterar-senha'
 
 const LoginRoute = LoginRouteImport.update({
@@ -29,6 +32,21 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppQuestionarioRoute = AppQuestionarioRouteImport.update({
+  id: '/questionario',
+  path: '/questionario',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHistoricoRoute = AppHistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAlterarSenhaRoute = AppAlterarSenhaRouteImport.update({
   id: '/alterar-senha',
   path: '/alterar-senha',
@@ -40,12 +58,17 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/app/alterar-senha': typeof AppAlterarSenhaRoute
+  '/app/historico': typeof AppHistoricoRoute
+  '/app/questionario': typeof AppQuestionarioRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/app/alterar-senha': typeof AppAlterarSenhaRoute
+  '/app/historico': typeof AppHistoricoRoute
+  '/app/questionario': typeof AppQuestionarioRoute
+  '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +76,37 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/app/alterar-senha': typeof AppAlterarSenhaRoute
+  '/app/historico': typeof AppHistoricoRoute
+  '/app/questionario': typeof AppQuestionarioRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/login' | '/app/alterar-senha'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/login'
+    | '/app/alterar-senha'
+    | '/app/historico'
+    | '/app/questionario'
+    | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app' | '/login' | '/app/alterar-senha'
-  id: '__root__' | '/' | '/app' | '/login' | '/app/alterar-senha'
+  to:
+    | '/'
+    | '/login'
+    | '/app/alterar-senha'
+    | '/app/historico'
+    | '/app/questionario'
+    | '/app'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/login'
+    | '/app/alterar-senha'
+    | '/app/historico'
+    | '/app/questionario'
+    | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -91,6 +138,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/questionario': {
+      id: '/app/questionario'
+      path: '/questionario'
+      fullPath: '/app/questionario'
+      preLoaderRoute: typeof AppQuestionarioRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/historico': {
+      id: '/app/historico'
+      path: '/historico'
+      fullPath: '/app/historico'
+      preLoaderRoute: typeof AppHistoricoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/alterar-senha': {
       id: '/app/alterar-senha'
       path: '/alterar-senha'
@@ -103,10 +171,16 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAlterarSenhaRoute: typeof AppAlterarSenhaRoute
+  AppHistoricoRoute: typeof AppHistoricoRoute
+  AppQuestionarioRoute: typeof AppQuestionarioRoute
+  AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAlterarSenhaRoute: AppAlterarSenhaRoute,
+  AppHistoricoRoute: AppHistoricoRoute,
+  AppQuestionarioRoute: AppQuestionarioRoute,
+  AppIndexRoute: AppIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
