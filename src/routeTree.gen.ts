@@ -15,7 +15,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppQuestionarioRouteImport } from './routes/app.questionario'
 import { Route as AppHistoricoRouteImport } from './routes/app.historico'
+import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppAlterarSenhaRouteImport } from './routes/app.alterar-senha'
+import { Route as AppAlertasRouteImport } from './routes/app.alertas'
+import { Route as AppAtletasIndexRouteImport } from './routes/app.atletas.index'
+import { Route as AppAtletasIdRouteImport } from './routes/app.atletas.$id'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -47,9 +51,29 @@ const AppHistoricoRoute = AppHistoricoRouteImport.update({
   path: '/historico',
   getParentRoute: () => AppRoute,
 } as any)
+const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAlterarSenhaRoute = AppAlterarSenhaRouteImport.update({
   id: '/alterar-senha',
   path: '/alterar-senha',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAlertasRoute = AppAlertasRouteImport.update({
+  id: '/alertas',
+  path: '/alertas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAtletasIndexRoute = AppAtletasIndexRouteImport.update({
+  id: '/atletas/',
+  path: '/atletas/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAtletasIdRoute = AppAtletasIdRouteImport.update({
+  id: '/atletas/$id',
+  path: '/atletas/$id',
   getParentRoute: () => AppRoute,
 } as any)
 
@@ -57,28 +81,40 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/app/alertas': typeof AppAlertasRoute
   '/app/alterar-senha': typeof AppAlterarSenhaRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/historico': typeof AppHistoricoRoute
   '/app/questionario': typeof AppQuestionarioRoute
   '/app/': typeof AppIndexRoute
+  '/app/atletas/$id': typeof AppAtletasIdRoute
+  '/app/atletas/': typeof AppAtletasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/app/alertas': typeof AppAlertasRoute
   '/app/alterar-senha': typeof AppAlterarSenhaRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/historico': typeof AppHistoricoRoute
   '/app/questionario': typeof AppQuestionarioRoute
   '/app': typeof AppIndexRoute
+  '/app/atletas/$id': typeof AppAtletasIdRoute
+  '/app/atletas': typeof AppAtletasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/app/alertas': typeof AppAlertasRoute
   '/app/alterar-senha': typeof AppAlterarSenhaRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/historico': typeof AppHistoricoRoute
   '/app/questionario': typeof AppQuestionarioRoute
   '/app/': typeof AppIndexRoute
+  '/app/atletas/$id': typeof AppAtletasIdRoute
+  '/app/atletas/': typeof AppAtletasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -86,27 +122,39 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/login'
+    | '/app/alertas'
     | '/app/alterar-senha'
+    | '/app/configuracoes'
     | '/app/historico'
     | '/app/questionario'
     | '/app/'
+    | '/app/atletas/$id'
+    | '/app/atletas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/app/alertas'
     | '/app/alterar-senha'
+    | '/app/configuracoes'
     | '/app/historico'
     | '/app/questionario'
     | '/app'
+    | '/app/atletas/$id'
+    | '/app/atletas'
   id:
     | '__root__'
     | '/'
     | '/app'
     | '/login'
+    | '/app/alertas'
     | '/app/alterar-senha'
+    | '/app/configuracoes'
     | '/app/historico'
     | '/app/questionario'
     | '/app/'
+    | '/app/atletas/$id'
+    | '/app/atletas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -159,6 +207,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHistoricoRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/configuracoes': {
+      id: '/app/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/app/configuracoes'
+      preLoaderRoute: typeof AppConfiguracoesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/alterar-senha': {
       id: '/app/alterar-senha'
       path: '/alterar-senha'
@@ -166,21 +221,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAlterarSenhaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/alertas': {
+      id: '/app/alertas'
+      path: '/alertas'
+      fullPath: '/app/alertas'
+      preLoaderRoute: typeof AppAlertasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/atletas/': {
+      id: '/app/atletas/'
+      path: '/atletas'
+      fullPath: '/app/atletas/'
+      preLoaderRoute: typeof AppAtletasIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/atletas/$id': {
+      id: '/app/atletas/$id'
+      path: '/atletas/$id'
+      fullPath: '/app/atletas/$id'
+      preLoaderRoute: typeof AppAtletasIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppAlertasRoute: typeof AppAlertasRoute
   AppAlterarSenhaRoute: typeof AppAlterarSenhaRoute
+  AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppHistoricoRoute: typeof AppHistoricoRoute
   AppQuestionarioRoute: typeof AppQuestionarioRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppAtletasIdRoute: typeof AppAtletasIdRoute
+  AppAtletasIndexRoute: typeof AppAtletasIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAlertasRoute: AppAlertasRoute,
   AppAlterarSenhaRoute: AppAlterarSenhaRoute,
+  AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppHistoricoRoute: AppHistoricoRoute,
   AppQuestionarioRoute: AppQuestionarioRoute,
   AppIndexRoute: AppIndexRoute,
+  AppAtletasIdRoute: AppAtletasIdRoute,
+  AppAtletasIndexRoute: AppAtletasIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
