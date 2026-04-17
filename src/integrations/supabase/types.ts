@@ -14,16 +14,192 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      allowed_codes: {
+        Row: {
+          code: string
+          created_at: string
+          full_name: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          used: boolean
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          full_name: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          used?: boolean
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          used?: boolean
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          code: string
+          created_at: string
+          full_name: string
+          id: string
+          must_change_password: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          code: string
+          created_at?: string
+          full_name: string
+          id?: string
+          must_change_password?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          code?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          must_change_password?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      psychologist_notes: {
+        Row: {
+          athlete_user_id: string
+          author_user_id: string
+          content: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_user_id: string
+          author_user_id: string
+          content: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_user_id?: string
+          author_user_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      questionnaire_responses: {
+        Row: {
+          anger: number
+          confusion: number
+          created_at: string
+          depression: number
+          external_situations: number
+          fatigue: number
+          followup_note: string | null
+          id: string
+          performance: number
+          sleep_quality: number
+          sport_situations: number
+          stress_index: number
+          stress_level: string
+          tension: number
+          user_id: string
+          vigor: number
+          week: number
+          year: number
+        }
+        Insert: {
+          anger: number
+          confusion: number
+          created_at?: string
+          depression: number
+          external_situations: number
+          fatigue: number
+          followup_note?: string | null
+          id?: string
+          performance: number
+          sleep_quality: number
+          sport_situations: number
+          stress_index: number
+          stress_level: string
+          tension: number
+          user_id: string
+          vigor: number
+          week: number
+          year: number
+        }
+        Update: {
+          anger?: number
+          confusion?: number
+          created_at?: string
+          depression?: number
+          external_situations?: number
+          fatigue?: number
+          followup_note?: string | null
+          id?: string
+          performance?: number
+          sleep_quality?: number
+          sport_situations?: number
+          stress_index?: number
+          stress_level?: string
+          tension?: number
+          user_id?: string
+          vigor?: number
+          week?: number
+          year?: number
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "atleta" | "psicologo" | "treinador"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +326,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["atleta", "psicologo", "treinador"],
+    },
   },
 } as const
