@@ -70,7 +70,22 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
             aria-label="Abrir menu"
             className="ios-pressable p-2 -ml-2 rounded-full text-foreground"
           >
-            <Menu className="w-6 h-6" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-6 h-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <line x1="3" y1="5" x2="21" y2="5" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+              <line x1="3" y1="15" x2="21" y2="15" />
+              <line x1="3" y1="20" x2="21" y2="20" />
+            </svg>
           </button>
           <h1 className="font-semibold text-base tracking-tight truncate">
             {title ?? "Bem-Estar"}
