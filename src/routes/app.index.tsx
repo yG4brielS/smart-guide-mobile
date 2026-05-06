@@ -41,10 +41,11 @@ function HomePage() {
         const cur = isoYearWeek();
         setRespondedThisWeek(!!l && l.year === cur.year && l.week === cur.week);
       } else {
-        // psicologo / treinador — visão de equipe
+        // psicologo / treinador — visão de equipe (apenas atletas!)
         const { count } = await supabase
-          .from("profiles")
-          .select("*", { count: "exact", head: true });
+          .from("user_roles")
+          .select("*", { count: "exact", head: true })
+          .eq("role", "atleta");
         setTeamCount(count ?? 0);
 
         // últimas respostas com estresse alto
