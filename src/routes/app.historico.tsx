@@ -88,8 +88,11 @@ function HistoryPage() {
         .order("week", { ascending: true });
       const responses = (data as Row[]) ?? [];
 
-      const start = isoYearWeek(new Date(profile.created_at ?? Date.now()));
       const end = isoYearWeek();
+      const first = responses[0];
+      const start = first
+        ? { year: first.year, week: first.week }
+        : end;
       const weeks = buildWeekRange(start.year, start.week, end.year, end.week);
 
       const map = new Map<string, Row>();
