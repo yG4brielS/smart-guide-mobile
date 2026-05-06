@@ -1,7 +1,6 @@
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import {
-  Menu,
   Home,
   ClipboardList,
   History,
@@ -10,14 +9,12 @@ import {
   Users,
   AlertCircle,
   X,
-  Sun,
-  Moon,
-  Activity,
+  Info,
 } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
-import { useTheme } from "@/hooks/use-theme";
 import { signOut } from "@/lib/auth-helpers";
 import { cn } from "@/lib/utils";
+import { FeevaleLogo } from "@/components/FeevaleLogo";
 
 interface NavItem {
   to: string;
@@ -32,6 +29,7 @@ const NAV: NavItem[] = [
   { to: "/app/historico", label: "Histórico", icon: History, roles: ["atleta"] },
   { to: "/app/atletas", label: "Atletas", icon: Users, roles: ["psicologo", "treinador"] },
   { to: "/app/alertas", label: "Alertas", icon: AlertCircle, roles: ["treinador"] },
+  { to: "/app/sobre", label: "Sobre o projeto", icon: Info, roles: ["atleta", "psicologo", "treinador"] },
   { to: "/app/configuracoes", label: "Configurações", icon: Settings, roles: ["atleta", "psicologo", "treinador"] },
 ];
 
@@ -43,7 +41,6 @@ const ROLE_LABEL: Record<AppRole, string> = {
 
 export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
   const { profile, role } = useAuth();
-  const { theme, toggle } = useTheme();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -89,13 +86,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
           <h1 className="font-semibold text-base tracking-tight truncate">
             {title ?? "Bem-Estar"}
           </h1>
-          <button
-            onClick={toggle}
-            aria-label="Alternar tema"
-            className="ios-pressable p-2 -mr-2 rounded-full text-foreground"
-          >
-            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
+          <FeevaleLogo />
         </div>
       </header>
 
@@ -122,12 +113,10 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
       >
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-2xl bg-primary text-primary-foreground grid place-items-center shadow-soft">
-              <Activity className="w-5 h-5" />
-            </div>
+            <FeevaleLogo />
             <div>
               <p className="font-semibold leading-tight">Bem-Estar</p>
-              <p className="text-xs text-muted-foreground leading-tight">Atletas Universitários</p>
+              <p className="text-xs text-muted-foreground leading-tight">Atletas Feevale</p>
             </div>
           </div>
           <button

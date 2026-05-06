@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
-import { Inbox } from "lucide-react";
+import { Inbox, CalendarOff } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { AuthGate } from "@/components/AuthGate";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { formatWeekRange, stressLabel, type StressLevel } from "@/lib/wellbeing";
+import { formatWeekRange, isoYearWeek, stressLabel, type StressLevel } from "@/lib/wellbeing";
 
 export const Route = createFileRoute("/app/historico")({
   component: () => (
@@ -33,13 +33,52 @@ interface Row {
   created_at: string;
 }
 
+interface WeekSlot {
+  year: number;
+  week: number;
+  response: Row | null;
+}
+
+// Itera semanas ISO de (startYear,startWeek) até (endYear,endWeek) inclusive.
+function buildWeekRange(
+  startYear: number,
+  startWeek: number,
+  endYear: number,
+  endWeek: number
+): { year: number; week: number }[] {
+  const out: { year: number; week: number }[] = [];
+  let y = startYear;
+  let w = startWeek;
+  // Salvaguarda contra loop infinito.
+  for (let i = 0; i < 520; i++) {
+    out.push({ year: y, week: w });
+    if (y === endYear && w === endWeek) break;
+    // Avança 7 dias e relê a semana ISO — robusto para 52/53 semanas.
+    const monday = mondayOfIsoWeek(y, w);
+    monday.setUTCDate(monday.getUTCDate() + 7);
+    const next = isoYearWeek(monday);
+    y = next.year;
+    w = next.week;
+  }
+  return out;
+}
+
+function mondayOfIsoWeek(year: number, week: number): Date {
+  const simple = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7));
+  const dayOfWeek = simple.getUTCDay();
+  const monday = new Date(simple);
+  if (dayOfWeek <= 4) monday.setUTCDate(simple.getUTCDate() - simple.getUTCDay() + 1);
+  else monday.setUTCDate(simple.getUTCDate() + 8 - simple.getUTCDay());
+  return monday;
+}
+
 function HistoryPage() {
-  const { user } = useAuth();
-  const [rows, setRows] = useState<Row[]>([]);
+  const { user, profile } = useAuth();
+  const [slots, setSlots] = useState<WeekSlot[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !profile) return;
     (async () => {
       const { data } = await supabase
         .from("questionnaire_responses")
@@ -47,22 +86,46 @@ function HistoryPage() {
         .eq("user_id", user.id)
         .order("year", { ascending: true })
         .order("week", { ascending: true });
-      setRows((data as Row[]) ?? []);
+      const responses = (data as Row[]) ?? [];
+
+      const end = isoYearWeek();
+      const first = responses[0];
+      const start = first
+        ? { year: first.year, week: first.week }
+        : end;
+      const weeks = buildWeekRange(start.year, start.week, end.year, end.week);
+
+      const map = new Map<string, Row>();
+      responses.forEach((r) => map.set(`${r.year}-${r.week}`, r));
+
+      setSlots(
+        weeks.map((w) => ({
+          year: w.year,
+          week: w.week,
+          response: map.get(`${w.year}-${w.week}`) ?? null,
+        }))
+      );
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, profile]);
 
-  const chartData = rows.map((r) => ({
-    label: `S${r.week}`,
-    estresse: r.stress_index,
-    vigor: r.vigor,
-  }));
+  const answered = slots.filter((s) => s.response).length;
+  const total = slots.length;
+  const adesao = total > 0 ? Math.round((answered / total) * 100) : 0;
+
+  const chartData = slots
+    .filter((s) => s.response)
+    .map((s) => ({
+      label: `S${s.week}`,
+      estresse: s.response!.stress_index,
+      vigor: s.response!.vigor,
+    }));
 
   return (
     <AppShell title="Histórico">
       {loading ? (
         <div className="ios-card h-48 animate-pulse" />
-      ) : rows.length === 0 ? (
+      ) : total === 0 ? (
         <div className="ios-card p-6 text-center">
           <div className="mx-auto w-12 h-12 rounded-2xl bg-muted text-muted-foreground grid place-items-center mb-3">
             <Inbox className="w-6 h-6" />
@@ -74,49 +137,75 @@ function HistoryPage() {
         </div>
       ) : (
         <>
-          <div className="ios-card p-4">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
-              Evolução
-            </p>
-            <h3 className="font-semibold mb-3">Estresse vs Vigor</h3>
-            <div className="h-56 -ml-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="label" stroke="var(--color-muted-foreground)" fontSize={12} />
-                  <YAxis stroke="var(--color-muted-foreground)" fontSize={12} domain={[0, 10]} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--color-card)",
-                      border: "1px solid var(--color-border)",
-                      borderRadius: 12,
-                      fontSize: 12,
-                    }}
-                  />
-                  <Line type="monotone" dataKey="estresse" stroke="var(--color-destructive)" strokeWidth={2.5} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="vigor" stroke="var(--color-primary)" strokeWidth={2.5} dot={{ r: 3 }} />
-                </LineChart>
-              </ResponsiveContainer>
+          {/* Adesão */}
+          <div className="ios-card p-4 mb-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">Taxa de adesão</p>
+            <div className="flex items-end justify-between mt-1">
+              <p className="text-3xl font-bold">
+                {adesao}
+                <span className="text-base font-normal text-muted-foreground">%</span>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {answered} de {total} {total === 1 ? "semana" : "semanas"}
+              </p>
             </div>
-            <div className="flex gap-4 mt-2 text-xs">
-              <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-destructive" />
-                <span className="text-muted-foreground">Estresse</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-primary" />
-                <span className="text-muted-foreground">Vigor</span>
-              </div>
+            <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full bg-primary transition-all"
+                style={{ width: `${adesao}%` }}
+              />
             </div>
           </div>
 
+          {answered > 0 && (
+            <div className="ios-card p-4">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                Evolução
+              </p>
+              <h3 className="font-semibold mb-3">Estresse vs Vigor</h3>
+              <div className="h-56 -ml-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                    <XAxis dataKey="label" stroke="var(--color-muted-foreground)" fontSize={12} />
+                    <YAxis stroke="var(--color-muted-foreground)" fontSize={12} domain={[0, 10]} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "var(--color-card)",
+                        border: "1px solid var(--color-border)",
+                        borderRadius: 12,
+                        fontSize: 12,
+                      }}
+                    />
+                    <Line type="monotone" dataKey="estresse" stroke="var(--color-destructive)" strokeWidth={2.5} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="vigor" stroke="var(--color-primary)" strokeWidth={2.5} dot={{ r: 3 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex gap-4 mt-2 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-destructive" />
+                  <span className="text-muted-foreground">Estresse</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-primary" />
+                  <span className="text-muted-foreground">Vigor</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mt-5 space-y-3">
             <p className="text-xs uppercase tracking-wider text-muted-foreground px-1">
-              Respostas
+              Semanas
             </p>
-            {[...rows].reverse().map((r) => (
-              <ResponseRow key={r.id} row={r} />
-            ))}
+            {[...slots].reverse().map((s) =>
+              s.response ? (
+                <ResponseRow key={`${s.year}-${s.week}`} row={s.response} />
+              ) : (
+                <MissingRow key={`${s.year}-${s.week}`} year={s.year} week={s.week} />
+              )
+            )}
           </div>
         </>
       )}
@@ -146,6 +235,27 @@ function ResponseRow({ row }: { row: Row }) {
         <Mini label="Vigor" value={row.vigor} max={10} />
         <Mini label="Sono" value={row.sleep_quality} max={4} />
         <Mini label="Desemp." value={row.performance} max={4} />
+      </div>
+    </div>
+  );
+}
+
+function MissingRow({ year, week }: { year: number; week: number }) {
+  return (
+    <div className="ios-card p-4 opacity-80 border-dashed">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-muted text-muted-foreground grid place-items-center">
+            <CalendarOff className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="font-semibold">Semana {week}</p>
+            <p className="text-xs text-muted-foreground">{formatWeekRange(year, week)}</p>
+          </div>
+        </div>
+        <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-muted text-muted-foreground">
+          Não respondido
+        </span>
       </div>
     </div>
   );
