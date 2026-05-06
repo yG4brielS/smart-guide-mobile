@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppUsuariosRouteImport } from './routes/app.usuarios'
 import { Route as AppSobreRouteImport } from './routes/app.sobre'
 import { Route as AppQuestionarioRouteImport } from './routes/app.questionario'
 import { Route as AppHistoricoRouteImport } from './routes/app.historico'
@@ -40,6 +41,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUsuariosRoute = AppUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSobreRoute = AppSobreRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/app/historico': typeof AppHistoricoRoute
   '/app/questionario': typeof AppQuestionarioRoute
   '/app/sobre': typeof AppSobreRoute
+  '/app/usuarios': typeof AppUsuariosRoute
   '/app/': typeof AppIndexRoute
   '/app/atletas/$id': typeof AppAtletasIdRoute
   '/app/atletas/': typeof AppAtletasIndexRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/app/historico': typeof AppHistoricoRoute
   '/app/questionario': typeof AppQuestionarioRoute
   '/app/sobre': typeof AppSobreRoute
+  '/app/usuarios': typeof AppUsuariosRoute
   '/app': typeof AppIndexRoute
   '/app/atletas/$id': typeof AppAtletasIdRoute
   '/app/atletas': typeof AppAtletasIndexRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/app/historico': typeof AppHistoricoRoute
   '/app/questionario': typeof AppQuestionarioRoute
   '/app/sobre': typeof AppSobreRoute
+  '/app/usuarios': typeof AppUsuariosRoute
   '/app/': typeof AppIndexRoute
   '/app/atletas/$id': typeof AppAtletasIdRoute
   '/app/atletas/': typeof AppAtletasIndexRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/app/historico'
     | '/app/questionario'
     | '/app/sobre'
+    | '/app/usuarios'
     | '/app/'
     | '/app/atletas/$id'
     | '/app/atletas/'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/app/historico'
     | '/app/questionario'
     | '/app/sobre'
+    | '/app/usuarios'
     | '/app'
     | '/app/atletas/$id'
     | '/app/atletas'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/app/historico'
     | '/app/questionario'
     | '/app/sobre'
+    | '/app/usuarios'
     | '/app/'
     | '/app/atletas/$id'
     | '/app/atletas/'
@@ -203,6 +215,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/usuarios': {
+      id: '/app/usuarios'
+      path: '/usuarios'
+      fullPath: '/app/usuarios'
+      preLoaderRoute: typeof AppUsuariosRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/sobre': {
@@ -271,6 +290,7 @@ interface AppRouteChildren {
   AppHistoricoRoute: typeof AppHistoricoRoute
   AppQuestionarioRoute: typeof AppQuestionarioRoute
   AppSobreRoute: typeof AppSobreRoute
+  AppUsuariosRoute: typeof AppUsuariosRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAtletasIdRoute: typeof AppAtletasIdRoute
   AppAtletasIndexRoute: typeof AppAtletasIndexRoute
@@ -283,6 +303,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppHistoricoRoute: AppHistoricoRoute,
   AppQuestionarioRoute: AppQuestionarioRoute,
   AppSobreRoute: AppSobreRoute,
+  AppUsuariosRoute: AppUsuariosRoute,
   AppIndexRoute: AppIndexRoute,
   AppAtletasIdRoute: AppAtletasIdRoute,
   AppAtletasIndexRoute: AppAtletasIndexRoute,

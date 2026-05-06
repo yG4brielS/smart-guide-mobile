@@ -124,7 +124,8 @@ function LoginPage() {
 
           <p className="text-xs text-muted-foreground text-center mt-8 px-4 leading-relaxed">
             Apenas alunos com código autorizado podem acessar.
-            No primeiro acesso, sua senha é igual ao seu código.
+            No primeiro acesso, digite seu código no campo de código e também
+            no campo de senha. Em seguida o sistema pede para você criar uma senha pessoal.
           </p>
         </div>
       </div>

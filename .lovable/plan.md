@@ -1,43 +1,48 @@
-## Correções e melhorias
+## Por que está dando erro hoje
 
-### 1. Contagem de atletas correta (bug)
-Na home (`src/routes/app.index.tsx`) e na média da equipe, hoje conto a partir de `profiles` (que inclui psicólogo e treinador). Vou contar a partir de `user_roles` filtrando `role = 'atleta'`. Isso afeta:
-- `src/routes/app.index.tsx` — card "Atletas" (psicólogo/treinador)
-- Confirmar que `app.atletas.index.tsx` e `app.alertas.tsx` já filtram por role (sim, já filtram — sem alteração).
+Você está tentando criar usuário direto pelo painel do Cloud (Profiles → Add user). O backend tem um trigger (`handle_new_user`) que **exige** o campo `code` no metadata e que o código já exista em `allowed_codes`. O painel não envia esse metadata, então cai no erro "Código do aluno é obrigatório / Database error creating new user".
 
-### 2. Tema apenas em Configurações
-- Remover botão Sol/Lua do topo do `AppShell` (`src/components/AppShell.tsx`).
-- Manter o toggle existente em `src/routes/app.configuracoes.tsx`.
+A solução correta é fazer o cadastro **dentro do app**, com uma tela própria que: (1) registra o código em `allowed_codes`, (2) cria o usuário no Auth com `email = codigo@bem-estar.app` e `senha = código`, passando o metadata correto. O trigger então cria profile + role + marca o código como usado, e o aluno já consegue logar usando só o código (no primeiro acesso senha = código, e o app já força a troca).
 
-### 3. Logo Universidade Feevale no topo
-- Substituir o ícone `Activity` (atualmente no drawer) e adicionar a logo no header onde antes ficava o botão de tema.
-- Como ainda não foi enviada a imagem, vou usar um placeholder textual "FEEVALE" estilizado em verde, dentro de um pill arredondado, deixando pronto um componente `<FeevaleLogo />` em `src/components/FeevaleLogo.tsx` que poderá receber depois um `<img src="/feevale.png" />` quando você enviar o arquivo.
-- Instrução: assim que enviar a foto, ela é colocada em `public/feevale.png` e o componente passa a usar `<img>`.
+## O que vou construir
 
-### 4. Histórico mostrando semanas não respondidas (taxa de adesão)
-No `src/routes/app.historico.tsx`:
-- Determinar a "primeira semana" do atleta (semana do `created_at` do profile) até a semana ISO atual.
-- Gerar a lista de todas as semanas no intervalo.
-- Para cada semana: se houver resposta, mostra o card normal; se não houver, mostra um card cinza "Não respondido" com badge de adesão.
-- Adicionar um resumo no topo: "Adesão: X de Y semanas (Z%)".
-- O gráfico continua usando apenas semanas respondidas (gaps são pulados).
+### 1. Novo papel `moderador`
+- Adicionar `moderador` ao enum `app_role` (migration).
+- Criar uma função `is_moderador(uid)` (security definer) e RLS para deixar moderador ler tudo que precisar.
+- Para criar o **primeiro moderador**, vou rodar um update no `user_roles` promovendo a conta que você indicar (me diga o código depois — enquanto isso deixo um SQL pronto para você executar com 1 clique e te aviso na hora certa).
 
-Comportamento de envio do questionário não muda — segue 1x por semana ISO, com bloqueio rígido.
+### 2. Server function `createAthleteUser`
+Arquivo novo: `src/server/users.functions.ts`
+- Protegida por middleware que valida que o caller tem role `moderador`.
+- Recebe `{ code, full_name }` (validados com zod: code 1–50 alfanumérico, nome 1–120).
+- Usa `supabaseAdmin` (service role) para:
+  1. `INSERT INTO allowed_codes (code, full_name, role='atleta', used=false)` — falha amigável se já existe.
+  2. `supabaseAdmin.auth.admin.createUser({ email, password: code, email_confirm: true, user_metadata: { code } })`.
+- O trigger `handle_new_user` faz o resto (profile + user_roles + marca used).
+- Se o `createUser` falhar, faz rollback do `allowed_codes`.
 
-### 5. Aba "Sobre o projeto"
-- Nova rota `src/routes/app.sobre.tsx` com:
-  - Objetivo do projeto: monitorar bem-estar e índice de estresse de atletas universitários da Feevale, oferecendo suporte preventivo via psicólogos e treinadores.
-  - Como funciona: questionário semanal validado, acompanhamento longitudinal, alertas para a equipe técnica, sigilo de notas do psicólogo.
-  - Responsáveis: campo de texto com os nomes — **preciso que você me informe os nomes dos responsáveis** (autor/orientador/equipe). Enquanto isso deixarei placeholders "[Nome do responsável]" para você editar depois ou me passar agora.
-  - Versão e contato.
-- Adicionar item no menu lateral (`AppShell` NAV) "Sobre" com ícone `Info`, visível para todos os papéis.
+### 3. Nova tela `Adicionar atleta`
+Arquivo novo: `src/routes/app.usuarios.tsx`
+- Visível apenas para moderador (`AuthGate allow={["moderador"]}`).
+- Form com 2 campos: **Código do aluno** e **Nome completo**.
+- Botão "Cadastrar". Em sucesso: toast verde "Atleta cadastrado. Senha inicial: <código>" + limpa o form.
+- Lista abaixo dos últimos códigos cadastrados (de `allowed_codes`, com badge "já acessou" / "pendente").
 
-### Arquivos alterados/criados
-- `src/components/AppShell.tsx` — remover toggle de tema, trocar ícone por logo Feevale, adicionar item "Sobre".
-- `src/components/FeevaleLogo.tsx` (novo) — componente da logo (placeholder por enquanto).
-- `src/routes/app.index.tsx` — corrigir contagem de atletas via `user_roles`.
-- `src/routes/app.historico.tsx` — gerar série completa de semanas com lacunas e taxa de adesão.
-- `src/routes/app.sobre.tsx` (novo) — página Sobre o Projeto.
+### 4. Item no menu
+`src/components/AppShell.tsx`: adicionar "Adicionar atleta" no NAV, com ícone `UserPlus`, visível só para moderador.
 
-### Pergunta antes de implementar
-Quer me passar agora os nomes dos responsáveis (e eventualmente um pequeno texto institucional) para eu já incluir na página Sobre? Se preferir, sigo com placeholders e você edita depois — me diga "siga com placeholders" e eu prossigo.
+### 5. Mensagem clara no Login
+Ajustar o texto auxiliar do `login.tsx` para reforçar: "No primeiro acesso, digite seu código nos dois campos (usuário e senha). Depois o sistema pede para você criar uma senha pessoal."
+
+## Arquivos
+
+- `supabase/migrations/...` — adiciona `moderador` ao enum + função `is_moderador`.
+- `src/server/users.functions.ts` (novo) — `createAthleteUser` server function.
+- `src/routes/app.usuarios.tsx` (novo) — tela de cadastro.
+- `src/components/AppShell.tsx` — item de menu.
+- `src/routes/login.tsx` — texto de ajuda.
+- `src/routeTree.gen.ts` — regenerado automaticamente.
+
+## Pergunta
+
+Para promover a conta de moderador inicial, qual código deve virar moderador? (Pode me passar o código agora ou depois — sem isso, ninguém consegue ver a tela "Adicionar atleta".)
