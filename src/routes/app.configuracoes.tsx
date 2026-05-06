@@ -13,6 +13,7 @@ const ROLE_LABEL = {
   atleta: "Atleta",
   psicologo: "Psicólogo(a)",
   treinador: "Treinador(a)",
+  moderador: "Moderador(a)",
 } as const;
 
 function SettingsPage() {
