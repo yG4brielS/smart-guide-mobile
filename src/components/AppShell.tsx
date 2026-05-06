@@ -10,6 +10,7 @@ import {
   AlertCircle,
   X,
   Info,
+  UserPlus,
 } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { signOut } from "@/lib/auth-helpers";
@@ -24,19 +25,21 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { to: "/app", label: "Início", icon: Home, roles: ["atleta", "psicologo", "treinador"] },
+  { to: "/app", label: "Início", icon: Home, roles: ["atleta", "psicologo", "treinador", "moderador"] },
   { to: "/app/questionario", label: "Questionário", icon: ClipboardList, roles: ["atleta"] },
   { to: "/app/historico", label: "Histórico", icon: History, roles: ["atleta"] },
   { to: "/app/atletas", label: "Atletas", icon: Users, roles: ["psicologo", "treinador"] },
   { to: "/app/alertas", label: "Alertas", icon: AlertCircle, roles: ["treinador"] },
-  { to: "/app/sobre", label: "Sobre o projeto", icon: Info, roles: ["atleta", "psicologo", "treinador"] },
-  { to: "/app/configuracoes", label: "Configurações", icon: Settings, roles: ["atleta", "psicologo", "treinador"] },
+  { to: "/app/usuarios", label: "Adicionar atleta", icon: UserPlus, roles: ["moderador"] },
+  { to: "/app/sobre", label: "Sobre o projeto", icon: Info, roles: ["atleta", "psicologo", "treinador", "moderador"] },
+  { to: "/app/configuracoes", label: "Configurações", icon: Settings, roles: ["atleta", "psicologo", "treinador", "moderador"] },
 ];
 
 const ROLE_LABEL: Record<AppRole, string> = {
   atleta: "Atleta",
   psicologo: "Psicólogo(a)",
   treinador: "Treinador(a)",
+  moderador: "Moderador(a)",
 };
 
 export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
