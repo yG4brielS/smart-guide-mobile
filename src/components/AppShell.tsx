@@ -29,6 +29,7 @@ const NAV: NavItem[] = [
   { to: "/app", label: "Início", icon: Home, roles: ["atleta", "psicologo", "treinador", "moderador"] },
   { to: "/app/questionario", label: "Questionário", icon: ClipboardList, roles: ["atleta"] },
   { to: "/app/historico", label: "Histórico", icon: History, roles: ["atleta"] },
+  { to: "/app/dashboard", label: "Dashboard", icon: BarChart3, roles: ["psicologo", "treinador"] },
   { to: "/app/atletas", label: "Atletas", icon: Users, roles: ["psicologo", "treinador"] },
   { to: "/app/alertas", label: "Alertas", icon: AlertCircle, roles: ["treinador"] },
   { to: "/app/usuarios", label: "Adicionar atleta", icon: UserPlus, roles: ["moderador"] },
