@@ -17,6 +17,7 @@ import { Route as AppUsuariosRouteImport } from './routes/app.usuarios'
 import { Route as AppSobreRouteImport } from './routes/app.sobre'
 import { Route as AppQuestionarioRouteImport } from './routes/app.questionario'
 import { Route as AppHistoricoRouteImport } from './routes/app.historico'
+import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppAlterarSenhaRouteImport } from './routes/app.alterar-senha'
 import { Route as AppAlertasRouteImport } from './routes/app.alertas'
@@ -63,6 +64,11 @@ const AppHistoricoRoute = AppHistoricoRouteImport.update({
   path: '/historico',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/app/alertas': typeof AppAlertasRoute
   '/app/alterar-senha': typeof AppAlterarSenhaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/dashboard': typeof AppDashboardRoute
   '/app/historico': typeof AppHistoricoRoute
   '/app/questionario': typeof AppQuestionarioRoute
   '/app/sobre': typeof AppSobreRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/app/alertas': typeof AppAlertasRoute
   '/app/alterar-senha': typeof AppAlterarSenhaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/dashboard': typeof AppDashboardRoute
   '/app/historico': typeof AppHistoricoRoute
   '/app/questionario': typeof AppQuestionarioRoute
   '/app/sobre': typeof AppSobreRoute
@@ -126,6 +134,7 @@ export interface FileRoutesById {
   '/app/alertas': typeof AppAlertasRoute
   '/app/alterar-senha': typeof AppAlterarSenhaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/dashboard': typeof AppDashboardRoute
   '/app/historico': typeof AppHistoricoRoute
   '/app/questionario': typeof AppQuestionarioRoute
   '/app/sobre': typeof AppSobreRoute
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/app/alertas'
     | '/app/alterar-senha'
     | '/app/configuracoes'
+    | '/app/dashboard'
     | '/app/historico'
     | '/app/questionario'
     | '/app/sobre'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/app/alertas'
     | '/app/alterar-senha'
     | '/app/configuracoes'
+    | '/app/dashboard'
     | '/app/historico'
     | '/app/questionario'
     | '/app/sobre'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/app/alertas'
     | '/app/alterar-senha'
     | '/app/configuracoes'
+    | '/app/dashboard'
     | '/app/historico'
     | '/app/questionario'
     | '/app/sobre'
@@ -245,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHistoricoRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/dashboard': {
+      id: '/app/dashboard'
+      path: '/dashboard'
+      fullPath: '/app/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/configuracoes': {
       id: '/app/configuracoes'
       path: '/configuracoes'
@@ -287,6 +306,7 @@ interface AppRouteChildren {
   AppAlertasRoute: typeof AppAlertasRoute
   AppAlterarSenhaRoute: typeof AppAlterarSenhaRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
+  AppDashboardRoute: typeof AppDashboardRoute
   AppHistoricoRoute: typeof AppHistoricoRoute
   AppQuestionarioRoute: typeof AppQuestionarioRoute
   AppSobreRoute: typeof AppSobreRoute
@@ -300,6 +320,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAlertasRoute: AppAlertasRoute,
   AppAlterarSenhaRoute: AppAlterarSenhaRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
+  AppDashboardRoute: AppDashboardRoute,
   AppHistoricoRoute: AppHistoricoRoute,
   AppQuestionarioRoute: AppQuestionarioRoute,
   AppSobreRoute: AppSobreRoute,
