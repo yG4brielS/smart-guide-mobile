@@ -11,6 +11,7 @@ import {
   X,
   Info,
   UserPlus,
+  BarChart3,
 } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { signOut } from "@/lib/auth-helpers";
