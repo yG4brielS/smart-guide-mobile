@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { validateSignupCode } from "@/server/users.functions";
 
 // Email sintético — o usuário só usa o código.
 export function codeToEmail(code: string): string {
@@ -14,13 +15,7 @@ export interface AllowedCode {
 }
 
 export async function findAllowedCode(code: string): Promise<AllowedCode | null> {
-  const { data, error } = await supabase
-    .from("allowed_codes")
-    .select("code,full_name,role,used")
-    .eq("code", code.trim())
-    .maybeSingle();
-  if (error) throw error;
-  return (data as AllowedCode | null) ?? null;
+  return await validateSignupCode({ data: { code: code.trim() } });
 }
 
 /**
