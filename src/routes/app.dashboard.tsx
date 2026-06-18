@@ -270,9 +270,9 @@ function DashboardPage() {
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line type="monotone" dataKey="estresse" stroke="var(--color-destructive)" strokeWidth={2.5} />
-                <Line type="monotone" dataKey="vigor" stroke="var(--color-primary)" strokeWidth={2.5} />
-                <Line type="monotone" dataKey="fadiga" stroke="var(--color-warning)" strokeWidth={2.5} />
+                <Line type="monotone" dataKey="estresse" stroke="var(--color-destructive)" strokeWidth={2.5} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="vigor" stroke="var(--color-primary)" strokeWidth={2.5} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="fadiga" stroke="var(--color-warning)" strokeWidth={2.5} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
