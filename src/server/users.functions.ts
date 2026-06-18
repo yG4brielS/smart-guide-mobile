@@ -14,6 +14,40 @@ const InputSchema = z.object({
   full_name: z.string().trim().min(1, "Nome é obrigatório").max(120),
 });
 
+const CodeOnlySchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(1)
+    .max(50)
+    .regex(/^[A-Za-z0-9._-]+$/),
+});
+
+// Validação pública (sem autenticação) usada pela tela de login.
+// Retorna apenas o mínimo necessário — não expõe a tabela inteira.
+export const validateSignupCode = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => CodeOnlySchema.parse(input))
+  .handler(async ({ data }) => {
+    const SUPABASE_URL = process.env.SUPABASE_URL!;
+    const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const admin = createClient<Database>(SUPABASE_URL, SERVICE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: row, error } = await admin
+      .from("allowed_codes")
+      .select("code,full_name,role,used")
+      .eq("code", data.code)
+      .maybeSingle();
+    if (error) throw new Error("Falha ao validar código");
+    if (!row) return null;
+    return {
+      code: row.code,
+      full_name: row.full_name,
+      role: row.role as "atleta" | "psicologo" | "treinador",
+      used: row.used,
+    };
+  });
+
 export const createAthleteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => InputSchema.parse(input))
