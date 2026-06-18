@@ -115,13 +115,14 @@ function HistoryPage() {
   const total = slots.length;
   const adesao = total > 0 ? Math.round((answered / total) * 100) : 0;
 
-  const chartData = slots
-    .filter((s) => s.response)
-    .map((s) => ({
-      label: `S${s.week}`,
-      estresse: s.response!.stress_index,
-      vigor: s.response!.vigor,
-    }));
+  const answeredSlots = slots.filter((s) => s.response);
+  const yearsInChart = new Set(answeredSlots.map((s) => s.year));
+  const showYear = yearsInChart.size > 1;
+  const chartData = answeredSlots.map((s) => ({
+    label: showYear ? `S${s.week}/${String(s.year).slice(-2)}` : `S${s.week}`,
+    estresse: s.response!.stress_index,
+    vigor: s.response!.vigor,
+  }));
 
   return (
     <AppShell title="Histórico">
