@@ -1,48 +1,30 @@
-## Por que está dando erro hoje
+## Objetivo
+Limpar todas as respostas de questionário no banco e investigar o "loop infinito" da semana 19 no histórico do atleta.
 
-Você está tentando criar usuário direto pelo painel do Cloud (Profiles → Add user). O backend tem um trigger (`handle_new_user`) que **exige** o campo `code` no metadata e que o código já exista em `allowed_codes`. O painel não envia esse metadata, então cai no erro "Código do aluno é obrigatório / Database error creating new user".
+## Passo 1 — Apagar respostas
+Rodar uma migration que faz:
 
-A solução correta é fazer o cadastro **dentro do app**, com uma tela própria que: (1) registra o código em `allowed_codes`, (2) cria o usuário no Auth com `email = codigo@bem-estar.app` e `senha = código`, passando o metadata correto. O trigger então cria profile + role + marca o código como usado, e o aluno já consegue logar usando só o código (no primeiro acesso senha = código, e o app já força a troca).
+```sql
+DELETE FROM public.questionnaire_responses;
+```
 
-## O que vou construir
+Resultado: as 6 respostas existentes (semanas 19 e 21 de 2026, dos 3 atletas) são removidas. Cada atleta pode responder normalmente de novo.
 
-### 1. Novo papel `moderador`
-- Adicionar `moderador` ao enum `app_role` (migration).
-- Criar uma função `is_moderador(uid)` (security definer) e RLS para deixar moderador ler tudo que precisar.
-- Para criar o **primeiro moderador**, vou rodar um update no `user_roles` promovendo a conta que você indicar (me diga o código depois — enquanto isso deixo um SQL pronto para você executar com 1 clique e te aviso na hora certa).
+> Observação: como é DELETE em dados (não em esquema), eu rodo via insert tool, não via migration de schema.
 
-### 2. Server function `createAthleteUser`
-Arquivo novo: `src/server/users.functions.ts`
-- Protegida por middleware que valida que o caller tem role `moderador`.
-- Recebe `{ code, full_name }` (validados com zod: code 1–50 alfanumérico, nome 1–120).
-- Usa `supabaseAdmin` (service role) para:
-  1. `INSERT INTO allowed_codes (code, full_name, role='atleta', used=false)` — falha amigável se já existe.
-  2. `supabaseAdmin.auth.admin.createUser({ email, password: code, email_confirm: true, user_metadata: { code } })`.
-- O trigger `handle_new_user` faz o resto (profile + user_roles + marca used).
-- Se o `createUser` falhar, faz rollback do `allowed_codes`.
+## Passo 2 — Corrigir a tela "Histórico do atleta"
+Suspeita do bug: em `src/routes/app.historico.tsx`, a função `buildWeekRange` usa `mondayOfIsoWeek(year, week)` e depois soma 7 dias para avançar para a próxima semana ISO. Em algumas viradas de ano (semana 52/53 → semana 1), o cálculo pode devolver a mesma semana e prender o loop até bater no limite de 520 iterações, renderizando centenas de cartões "Não respondido" — o que parece "semana 19 infinita".
 
-### 3. Nova tela `Adicionar atleta`
-Arquivo novo: `src/routes/app.usuarios.tsx`
-- Visível apenas para moderador (`AuthGate allow={["moderador"]}`).
-- Form com 2 campos: **Código do aluno** e **Nome completo**.
-- Botão "Cadastrar". Em sucesso: toast verde "Atleta cadastrado. Senha inicial: <código>" + limpa o form.
-- Lista abaixo dos últimos códigos cadastrados (de `allowed_codes`, com badge "já acessou" / "pendente").
+Plano:
+1. Substituir o algoritmo por um avanço determinístico em dias UTC + reconvertendo via `isoYearWeek`, garantindo que cada iteração avance exatamente 7 dias e nunca devolva a mesma `(year, week)` duas vezes seguidas.
+2. Adicionar uma trava extra: se a próxima `(year, week)` for igual à atual, sair do loop.
+3. Limitar o range exibido a no máximo 26 semanas (~6 meses) para evitar listas gigantes quando a primeira resposta for muito antiga — semanas mais antigas continuam acessíveis (podemos paginar depois, se quiser).
 
-### 4. Item no menu
-`src/components/AppShell.tsx`: adicionar "Adicionar atleta" no NAV, com ícone `UserPlus`, visível só para moderador.
+## Passo 3 — Verificação
+- Entrar como atleta e abrir `/app/histórico`: deve mostrar "Sem respostas ainda" (após o DELETE) sem travar.
+- Responder o questionário da semana atual e conferir que aparece corretamente, sem semanas duplicadas.
 
-### 5. Mensagem clara no Login
-Ajustar o texto auxiliar do `login.tsx` para reforçar: "No primeiro acesso, digite seu código nos dois campos (usuário e senha). Depois o sistema pede para você criar uma senha pessoal."
-
-## Arquivos
-
-- `supabase/migrations/...` — adiciona `moderador` ao enum + função `is_moderador`.
-- `src/server/users.functions.ts` (novo) — `createAthleteUser` server function.
-- `src/routes/app.usuarios.tsx` (novo) — tela de cadastro.
-- `src/components/AppShell.tsx` — item de menu.
-- `src/routes/login.tsx` — texto de ajuda.
-- `src/routeTree.gen.ts` — regenerado automaticamente.
-
-## Pergunta
-
-Para promover a conta de moderador inicial, qual código deve virar moderador? (Pode me passar o código agora ou depois — sem isso, ninguém consegue ver a tela "Adicionar atleta".)
+## Detalhes técnicos
+- Arquivo alterado: `src/routes/app.historico.tsx` (apenas `buildWeekRange` e a limitação de janela).
+- Sem mudanças de schema, sem mudanças de RLS.
+- Sem alterações em `src/routes/app.dashboard.tsx` ou `src/routes/app.atletas.$id.tsx`.

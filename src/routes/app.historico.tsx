@@ -40,6 +40,10 @@ interface WeekSlot {
 }
 
 // Itera semanas ISO de (startYear,startWeek) até (endYear,endWeek) inclusive.
+// Caminha do fim para o início somando -7 dias em UTC e reconverte via isoYearWeek.
+// Limita a janela a no máximo MAX_WEEKS semanas para evitar listas gigantes.
+const MAX_WEEKS = 26;
+
 function buildWeekRange(
   startYear: number,
   startWeek: number,
@@ -47,28 +51,26 @@ function buildWeekRange(
   endWeek: number
 ): { year: number; week: number }[] {
   const out: { year: number; week: number }[] = [];
-  let y = startYear;
-  let w = startWeek;
-  // Salvaguarda contra loop infinito.
-  for (let i = 0; i < 520; i++) {
-    out.push({ year: y, week: w });
-    if (y === endYear && w === endWeek) break;
-    // Avança 7 dias e relê a semana ISO — robusto para 52/53 semanas.
-    const monday = mondayOfIsoWeek(y, w);
-    monday.setUTCDate(monday.getUTCDate() + 7);
-    const next = isoYearWeek(monday);
-    y = next.year;
-    w = next.week;
+  const cursor = mondayOfIsoWeek(endYear, endWeek);
+  for (let i = 0; i < MAX_WEEKS; i++) {
+    const yw = isoYearWeek(cursor);
+    out.unshift({ year: yw.year, week: yw.week });
+    if (yw.year === startYear && yw.week === startWeek) break;
+    cursor.setUTCDate(cursor.getUTCDate() - 7);
+    const next = isoYearWeek(cursor);
+    if (next.year < startYear || (next.year === startYear && next.week < startWeek)) break;
   }
   return out;
 }
 
 function mondayOfIsoWeek(year: number, week: number): Date {
-  const simple = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7));
-  const dayOfWeek = simple.getUTCDay();
-  const monday = new Date(simple);
-  if (dayOfWeek <= 4) monday.setUTCDate(simple.getUTCDate() - simple.getUTCDay() + 1);
-  else monday.setUTCDate(simple.getUTCDate() + 8 - simple.getUTCDay());
+  // 4 de janeiro está sempre na semana 1 ISO.
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const jan4Day = jan4.getUTCDay() || 7; // 1..7
+  const week1Monday = new Date(jan4);
+  week1Monday.setUTCDate(jan4.getUTCDate() - (jan4Day - 1));
+  const monday = new Date(week1Monday);
+  monday.setUTCDate(week1Monday.getUTCDate() + (week - 1) * 7);
   return monday;
 }
 
