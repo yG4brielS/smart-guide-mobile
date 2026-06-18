@@ -129,15 +129,18 @@ function DashboardPage() {
       cur.n++;
       byWeek.set(key, cur);
     });
-    const weekly = Array.from(byWeek.entries())
+    const weeklyEntries = Array.from(byWeek.entries())
       .sort(([a], [b]) => (a < b ? -1 : 1))
       .slice(-8)
-      .map(([, v]) => ({
-        label: `S${v.week}`,
-        estresse: +(v.sumIdx / v.n).toFixed(1),
-        vigor: +(v.sumVigor / v.n).toFixed(1),
-        fadiga: +(v.sumFadiga / v.n).toFixed(1),
-      }));
+      .map(([, v]) => v);
+    const weeklyYears = new Set(weeklyEntries.map((v) => v.year));
+    const showWeeklyYear = weeklyYears.size > 1;
+    const weekly = weeklyEntries.map((v) => ({
+      label: showWeeklyYear ? `S${v.week}/${String(v.year).slice(-2)}` : `S${v.week}`,
+      estresse: +(v.sumIdx / v.n).toFixed(1),
+      vigor: +(v.sumVigor / v.n).toFixed(1),
+      fadiga: +(v.sumFadiga / v.n).toFixed(1),
+    }));
 
     // dimensões médias (última resposta de cada atleta)
     const dims = ["tension", "depression", "anger", "vigor", "fatigue", "confusion"] as const;
