@@ -98,8 +98,10 @@ function AthleteDetail() {
     await load();
   }
 
+  const years = new Set(responses.map((r) => r.year));
+  const showYear = years.size > 1;
   const chartData = responses.map((r) => ({
-    label: `S${r.week}`,
+    label: showYear ? `S${r.week}/${String(r.year).slice(-2)}` : `S${r.week}`,
     estresse: r.stress_index,
     vigor: r.vigor,
   }));
