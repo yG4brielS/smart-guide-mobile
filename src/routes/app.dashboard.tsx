@@ -255,27 +255,7 @@ function DashboardPage() {
         {stats.weekly.length === 0 ? (
           <Empty>Sem histórico suficiente.</Empty>
         ) : (
-          <div className="h-56 -ml-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={stats.weekly}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="label" stroke="var(--color-muted-foreground)" fontSize={12} />
-                <YAxis stroke="var(--color-muted-foreground)" fontSize={12} domain={[0, 10]} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "var(--color-card)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 12,
-                    fontSize: 12,
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line type="monotone" dataKey="estresse" stroke="var(--color-destructive)" strokeWidth={2.5} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="vigor" stroke="var(--color-primary)" strokeWidth={2.5} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="fadiga" stroke="var(--color-warning)" strokeWidth={2.5} dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <WeeklyChart data={stats.weekly} />
         )}
       </Section>
 
