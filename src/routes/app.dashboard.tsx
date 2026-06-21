@@ -383,3 +383,94 @@ function Section({
 function Empty({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-muted-foreground text-center py-3">{children}</p>;
 }
+
+interface WeeklyDatum {
+  label: string;
+  estresse: number;
+  vigor: number;
+  fadiga: number;
+}
+
+function WeeklyChart({ data }: { data: WeeklyDatum[] }) {
+  const [hovered, setHovered] = useState<string | null>(null);
+
+  const series = [
+    { key: "estresse", label: "Estresse", color: "var(--color-destructive)" },
+    { key: "vigor", label: "Vigor", color: "var(--color-primary)" },
+    { key: "fadiga", label: "Fadiga", color: "var(--color-warning)" },
+  ] as const;
+
+  const opacityFor = (k: string) => (hovered && hovered !== k ? 0.18 : 1);
+  const widthFor = (k: string) => (hovered === k ? 3.5 : 2.25);
+
+  return (
+    <div>
+      <div className="h-56 -ml-2">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+            <XAxis dataKey="label" stroke="var(--color-muted-foreground)" fontSize={12} />
+            <YAxis stroke="var(--color-muted-foreground)" fontSize={12} domain={[0, 10]} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "var(--color-card)",
+                border: "1px solid var(--color-border)",
+                borderRadius: 12,
+                fontSize: 12,
+              }}
+            />
+            {series.map((s) => (
+              <Line
+                key={s.key}
+                type="monotone"
+                dataKey={s.key}
+                name={s.label}
+                stroke={s.color}
+                strokeWidth={widthFor(s.key)}
+                strokeOpacity={opacityFor(s.key)}
+                dot={{ r: 3, strokeOpacity: opacityFor(s.key), fillOpacity: opacityFor(s.key) }}
+                activeDot={{ r: 5 }}
+                isAnimationActive={false}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex flex-wrap justify-center gap-2 mt-3">
+        {series.map((s) => {
+          const active = hovered === s.key;
+          const dim = hovered && !active;
+          return (
+            <button
+              key={s.key}
+              type="button"
+              onMouseEnter={() => setHovered(s.key)}
+              onMouseLeave={() => setHovered(null)}
+              onFocus={() => setHovered(s.key)}
+              onBlur={() => setHovered(null)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
+                active
+                  ? "border-transparent shadow-sm scale-105"
+                  : dim
+                  ? "border-border/60 opacity-40"
+                  : "border-border/60"
+              }`}
+              style={
+                active
+                  ? { backgroundColor: s.color, color: "var(--color-primary-foreground)" }
+                  : undefined
+              }
+            >
+              <span
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ backgroundColor: s.color }}
+              />
+              {s.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
