@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { AlertCircle, ChevronRight, ShieldCheck } from "lucide-react";
+import { AlertCircle, ChevronRight, ShieldCheck, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { AuthGate } from "@/components/AuthGate";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,12 +14,17 @@ export const Route = createFileRoute("/app/alertas")({
   ),
 });
 
+type Trend = "melhorando" | "piorando" | "estavel" | "novo";
+
 interface Item {
   user_id: string;
   full_name: string;
   code: string;
   last_index: number;
   last_level: StressLevel;
+  prev_index: number | null;
+  trend: Trend;
+  delta: number;
 }
 
 function AlertsPage() {
@@ -46,29 +51,43 @@ function AlertsPage() {
         .in("user_id", ids)
         .order("created_at", { ascending: false });
 
-      const last = new Map<string, { idx: number; lvl: StressLevel }>();
+      // últimos 2 por usuário
+      const byUser = new Map<string, { idx: number; lvl: StressLevel }[]>();
       (resps ?? []).forEach((r) => {
-        if (!last.has(r.user_id))
-          last.set(r.user_id, { idx: r.stress_index, lvl: r.stress_level as StressLevel });
+        const arr = byUser.get(r.user_id) ?? [];
+        if (arr.length < 2) {
+          arr.push({ idx: r.stress_index, lvl: r.stress_level as StressLevel });
+          byUser.set(r.user_id, arr);
+        }
       });
 
       const rows: Item[] = [];
       let sum = 0;
       let n = 0;
       (profs ?? []).forEach((p) => {
-        const l = last.get(p.user_id);
-        if (l) {
-          sum += l.idx;
-          n++;
-          if (l.lvl !== "baixo") {
-            rows.push({
-              user_id: p.user_id,
-              full_name: p.full_name,
-              code: p.code,
-              last_index: l.idx,
-              last_level: l.lvl,
-            });
-          }
+        const arr = byUser.get(p.user_id);
+        if (!arr || arr.length === 0) return;
+        const last = arr[0];
+        const prev = arr[1] ?? null;
+        sum += last.idx;
+        n++;
+        if (last.lvl !== "baixo") {
+          let trend: Trend;
+          const delta = prev ? last.idx - prev.idx : 0;
+          if (!prev) trend = "novo";
+          else if (delta <= -1) trend = "melhorando";
+          else if (delta >= 1) trend = "piorando";
+          else trend = "estavel";
+          rows.push({
+            user_id: p.user_id,
+            full_name: p.full_name,
+            code: p.code,
+            last_index: last.idx,
+            last_level: last.lvl,
+            prev_index: prev?.idx ?? null,
+            trend,
+            delta,
+          });
         }
       });
       rows.sort((a, b) => b.last_index - a.last_index);
@@ -80,7 +99,6 @@ function AlertsPage() {
 
   return (
     <AppShell title="Alertas">
-      {/* Resumo */}
       <div className="ios-card p-5 mb-4 bg-primary text-primary-foreground border-transparent">
         <p className="text-xs uppercase tracking-wider opacity-80">Média da equipe</p>
         <div className="flex items-end justify-between mt-1">
@@ -127,7 +145,10 @@ function AlertsPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold truncate">{it.full_name}</p>
-                  <p className="text-xs text-muted-foreground">{it.code}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <p className="text-xs text-muted-foreground">{it.code}</p>
+                    <TrendBadge trend={it.trend} delta={it.delta} />
+                  </div>
                 </div>
                 <span
                   className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
@@ -145,5 +166,32 @@ function AlertsPage() {
         </>
       )}
     </AppShell>
+  );
+}
+
+function TrendBadge({ trend, delta }: { trend: Trend; delta: number }) {
+  if (trend === "novo") {
+    return (
+      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-muted text-muted-foreground">
+        novo
+      </span>
+    );
+  }
+  const cfg = {
+    melhorando: { Icon: TrendingDown, cls: "bg-success/15 text-success", label: "melhorando" },
+    piorando: { Icon: TrendingUp, cls: "bg-destructive/15 text-destructive", label: "piorando" },
+    estavel: { Icon: Minus, cls: "bg-muted text-muted-foreground", label: "estável" },
+  }[trend];
+  const { Icon, cls, label } = cfg;
+  return (
+    <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${cls}`}>
+      <Icon className="w-2.5 h-2.5" />
+      {label}
+      {trend !== "estavel" && (
+        <span className="opacity-80">
+          {delta > 0 ? `+${delta}` : delta}
+        </span>
+      )}
+    </span>
   );
 }
