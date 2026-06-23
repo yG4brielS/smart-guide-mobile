@@ -4,7 +4,7 @@ import { ChevronRight, Search, Users } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { AuthGate } from "@/components/AuthGate";
 import { supabase } from "@/integrations/supabase/client";
-import { stressLabel, type StressLevel } from "@/lib/wellbeing";
+import { isoYearWeek, stressLabel, type StressLevel } from "@/lib/wellbeing";
 
 export const Route = createFileRoute("/app/atletas/")({
   component: () => (
@@ -20,6 +20,7 @@ interface AthleteRow {
   code: string;
   last_index: number | null;
   last_level: StressLevel | null;
+  responded_this_week: boolean;
 }
 
 function AthletesPage() {
@@ -29,7 +30,7 @@ function AthletesPage() {
 
   useEffect(() => {
     (async () => {
-      // pega só atletas
+      const cur = isoYearWeek();
       const { data: roleRows } = await supabase
         .from("user_roles")
         .select("user_id")
@@ -48,15 +49,17 @@ function AthletesPage() {
 
       const { data: resps } = await supabase
         .from("questionnaire_responses")
-        .select("user_id,stress_index,stress_level,created_at")
+        .select("user_id,stress_index,stress_level,year,week,created_at")
         .in("user_id", ids)
         .order("created_at", { ascending: false });
 
       const lastByUser = new Map<string, { idx: number; lvl: StressLevel }>();
+      const respondedWeek = new Set<string>();
       (resps ?? []).forEach((r) => {
         if (!lastByUser.has(r.user_id)) {
           lastByUser.set(r.user_id, { idx: r.stress_index, lvl: r.stress_level as StressLevel });
         }
+        if (r.year === cur.year && r.week === cur.week) respondedWeek.add(r.user_id);
       });
 
       const rows: AthleteRow[] = (profs ?? []).map((p) => {
@@ -67,9 +70,14 @@ function AthletesPage() {
           code: p.code,
           last_index: last?.idx ?? null,
           last_level: last?.lvl ?? null,
+          responded_this_week: respondedWeek.has(p.user_id),
         };
       });
-      rows.sort((a, b) => (b.last_index ?? -1) - (a.last_index ?? -1));
+      rows.sort((a, b) => {
+        // não respondeu primeiro, depois maior estresse
+        if (a.responded_this_week !== b.responded_this_week) return a.responded_this_week ? 1 : -1;
+        return (b.last_index ?? -1) - (a.last_index ?? -1);
+      });
       setItems(rows);
       setLoading(false);
     })();
@@ -122,11 +130,18 @@ function AthletesPage() {
                 <p className="font-semibold truncate">{a.full_name}</p>
                 <p className="text-xs text-muted-foreground">{a.code}</p>
               </div>
-              {a.last_level ? (
-                <Pill level={a.last_level} value={a.last_index!} />
-              ) : (
-                <span className="text-xs text-muted-foreground">Sem dados</span>
-              )}
+              <div className="flex flex-col items-end gap-1">
+                {!a.responded_this_week && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-muted text-muted-foreground border border-border">
+                    Não respondeu
+                  </span>
+                )}
+                {a.last_level ? (
+                  <Pill level={a.last_level} value={a.last_index!} />
+                ) : (
+                  <span className="text-xs text-muted-foreground">Sem dados</span>
+                )}
+              </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </Link>
           ))}
