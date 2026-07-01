@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { validateSignupCode } from "@/server/users.functions";
+import { validateSignupCode } from "@/lib/users.functions";
 
 // Email sintético — o usuário só usa o código.
 export function codeToEmail(code: string): string {
