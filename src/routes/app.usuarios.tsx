@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { AppShell } from "@/components/AppShell";
 import { AuthGate } from "@/components/AuthGate";
 import { supabase } from "@/integrations/supabase/client";
-import { createAthleteUser } from "@/server/users.functions";
+import { createAthleteUser } from "@/lib/users.functions";
 
 export const Route = createFileRoute("/app/usuarios")({
   component: () => (
