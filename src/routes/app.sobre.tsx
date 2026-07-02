@@ -51,6 +51,7 @@ function AboutPage() {
             <li>• Marcus Barbosa — Acompanhamento psicológico</li>
             <li>• Jorge Fernandes — Equipe técnica</li>
             <li>• Rodrigo Rafael Villarreal Goulart — Orientação acadêmica</li>
+            <li>• Érik Renato Pereira, Gabriel Schneider dos Santos e Herik Rafael Peter da Silva — Desenvolvimento</li>
           </ul>
         </Section>
 
