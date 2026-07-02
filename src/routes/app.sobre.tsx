@@ -47,14 +47,11 @@ function AboutPage() {
 
         <Section icon={Users} title="Responsáveis">
           <ul className="space-y-1 text-sm">
-            <li>• [Nome do responsável principal] — Coordenação</li>
-            <li>• [Nome do(a) psicólogo(a) responsável] — Acompanhamento psicológico</li>
-            <li>• [Nome do(a) treinador(a) responsável] — Equipe técnica</li>
-            <li>• [Nome do(a) orientador(a) acadêmico(a)] — Orientação</li>
+            <li>• Marcelo Kurk — Coordenação do projeto social</li>
+            <li>• Marcus Barbosa — Acompanhamento psicológico</li>
+            <li>• Jorge Fernandes — Equipe técnica</li>
+            <li>• Rodrigo Rafael Villarreal Goulart — Orientação acadêmica</li>
           </ul>
-          <p className="text-xs text-muted-foreground mt-3">
-            Envie os nomes finais para serem incluídos aqui.
-          </p>
         </Section>
 
         <p className="text-center text-xs text-muted-foreground pt-2">
